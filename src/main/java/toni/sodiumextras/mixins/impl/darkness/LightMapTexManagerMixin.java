@@ -14,10 +14,12 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(LightTexture.class)
 public class LightMapTexManagerMixin {
+	#if mc < 214
 	@Shadow @Final private DynamicTexture lightTexture;
 
 	@Inject(method = "<init>*", at = @At(value = "RETURN"))
 	private void inject$afterInit(GameRenderer gameRenderer, Minecraft minecraftClient, CallbackInfo ci) {
 		((TextureAccess) lightTexture).embPlus$enableUploadHook();
 	}
+	#endif
 }

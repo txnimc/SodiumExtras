@@ -187,6 +187,7 @@ public class EmbPlusOptions {
     }
 
     public static void setPerformanceOptions(List<OptionGroup> groups, SodiumOptionsStorage sodiumOpts) {
+        #if mc < 214
         var builder = OptionGroup.createBuilder();
         var fontShadow = OptionImpl.createBuilder(boolean.class, sodiumOpts)
                 .setName(Component.translatable("sodium.extras.options.fontshadow.title"))
@@ -206,6 +207,7 @@ public class EmbPlusOptions {
         builder.add(fontShadow); 
 
         groups.add(builder.build());
+        #endif
     }
 
 

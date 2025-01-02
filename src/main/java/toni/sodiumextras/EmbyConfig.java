@@ -30,6 +30,7 @@ import java.util.List;
 #endif
 
 #if FORGE
+import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.common.ForgeConfigSpec;
@@ -44,9 +45,10 @@ import net.neoforged.fml.event.config.ModConfigEvent;
 import net.neoforged.fml.config.ModConfig;
 import net.neoforged.neoforge.common.ModConfigSpec;
 import net.neoforged.neoforge.common.ModConfigSpec.*;
+import net.neoforged.api.distmarker.Dist;
 #endif
 
-#if FORGELIKE @EventBusSubscriber(bus = EventBusSubscriber.Bus.MOD, modid = SodiumExtras.ID) #endif
+#if FORGELIKE @EventBusSubscriber(bus = EventBusSubscriber.Bus.MOD, value = Dist.CLIENT, modid = SodiumExtras.ID) #endif
 public class EmbyConfig {
     public static final Marker IT = MarkerManager.getMarker("Config");
 
@@ -97,7 +99,9 @@ public class EmbyConfig {
 
     // PERFORMANCE;
     public static final BooleanValue hideJREI;
+    #if mc < 214
     public static final BooleanValue fontShadows;
+    #endif
     public static volatile boolean hideJREICache;
     public static volatile boolean fontShadowsCache;
     public static final BooleanValue tileEntityDistanceCulling;
@@ -250,9 +254,11 @@ public class EmbyConfig {
                 .comment("Toggles JREI item rendering until searching", "Increases performance a little bit and cleans your screen when you don't want to use it")
                 .define("hideJREI", false);
 
+        #if mc < 214
         fontShadows = BUILDER
                 .comment("Toggles Minecraft Fonts shadows", "Depending of the case may increase performance", "Gives a flat style text")
                 .define("fontShadows", true);
+        #endif
 
         // embeddiumextras -> performance -> distanceCulling
         BUILDER.push("distanceCulling");
@@ -362,7 +368,10 @@ public class EmbyConfig {
         darknessFullMoonBrightCache = darknessFullMoonBright.get();
 
         hideJREICache = hideJREI.get();
+
+        #if mc < 214
         fontShadowsCache = fontShadows.get();
+        #endif
 
         tileEntityDistanceCullingCache = tileEntityDistanceCulling.get();
         tileEntityCullingDistanceXCache = tileEntityCullingDistanceX.get();

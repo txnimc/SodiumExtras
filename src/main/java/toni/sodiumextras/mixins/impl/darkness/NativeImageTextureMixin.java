@@ -12,8 +12,9 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(DynamicTexture.class)
-public class NativeImageTextureMixin implements TextureAccess
+public class NativeImageTextureMixin #if mc < 214 implements TextureAccess #endif
 {
+    #if mc < 214
 	@Shadow private NativeImage pixels;
 	@Unique private boolean embPlus$enableHook = false;
 
@@ -24,8 +25,13 @@ public class NativeImageTextureMixin implements TextureAccess
         final NativeImage img = pixels;
         for (int b = 0; b < 16; b++) {
             for (int s = 0; s < 16; s++) {
+                #if mc >= 214
+                final int color = DarknessPlus.darken(img.getPixel(b, s), b, s);
+                img.setPixel(b, s, color);
+                #else
                 final int color = DarknessPlus.darken(img.getPixelRGBA(b, s), b, s);
                 img.setPixelRGBA(b, s, color);
+                #endif
             }
         }
     }
@@ -35,4 +41,5 @@ public class NativeImageTextureMixin implements TextureAccess
 	public void embPlus$enableUploadHook() {
 		embPlus$enableHook = true;
 	}
+    #endif
 }

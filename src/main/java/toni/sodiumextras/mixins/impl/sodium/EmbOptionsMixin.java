@@ -34,7 +34,7 @@ public class EmbOptionsMixin {
     @Inject(method = "<init>", at = @At("RETURN"))
     private void inject$dynLightsPage(Screen prevScreen, CallbackInfo ci) {
         //pages.add(new QualityPlusPage());
-        pages.add(new TrueDarknessPage());
+        #if mc < 214 pages.add(new TrueDarknessPage()); #endif
         pages.add(new EntityCullingPage());
         pages.add(new OthersPage());
     }

@@ -14,6 +14,7 @@ public class DimensionEffectsMixin {
 
     @Mixin(DimensionSpecialEffects.NetherEffects.class)
     public static class NetherMixin {
+        #if mc < 214
         @Inject(method = "getBrightnessDependentFogColor", at = @At(value = "RETURN"), cancellable = true)
         private void inject$brightFogColor(CallbackInfoReturnable<Vec3> cir) {
             if (EmbyConfig.darknessMode.get() == EmbyConfig.DarknessMode.OFF) return;
@@ -24,10 +25,12 @@ public class DimensionEffectsMixin {
                     EmbyConfig.darknessNetherFogBrightCache)
             );
         }
+        #endif
     }
 
     @Mixin(DimensionSpecialEffects.EndEffects.class)
     public static class EndMixin {
+        #if mc < 214
         @Inject(method = "getBrightnessDependentFogColor", at = @At(value = "RETURN"), cancellable = true)
         private void inject$brightFogColor(CallbackInfoReturnable<Vec3> cir) {
             if (EmbyConfig.darknessMode.get() == EmbyConfig.DarknessMode.OFF) return;
@@ -38,5 +41,6 @@ public class DimensionEffectsMixin {
                     EmbyConfig.darknessEndFogBrightCache)
             );
         }
+        #endif
     }
 }

@@ -1,66 +1,80 @@
-val settings = object : TxniTemplateSettings {
+import toni.blahaj.*
+import toni.blahaj.api.*
 
+val templateSettings = object : BlahajSettings {
 	// -------------------- Dependencies ---------------------- //
-	override val depsHandler: DependencyHandler get() = object : DependencyHandler {
-		override fun addGlobal(deps: DependencyHandlerScope) {
+	override val depsHandler: BlahajDependencyHandler get() = object : BlahajDependencyHandler {
+		override fun addGlobal(mod : ModData, deps: DependencyHandler) {
 
 		}
 
-		override fun addFabric(deps: DependencyHandlerScope) {
-			if (mcVersion == "1.21.1")
-				deps.modImplementation(modrinth("sodium", "mc1.21-0.6.0-beta.2-fabric"))
-			else
-				deps.modImplementation(modrinth("sodium", "mc1.20.1-0.5.11"))
+		override fun addFabric(mod : ModData, deps: DependencyHandler) {
+			deps.modImplementation(modrinth("sodium", when (mod.mcVersion) {
+				"1.21.4" -> "mc1.21.4-0.6.6-fabric"
+				"1.21.1" -> "mc1.21.1-0.6.5-fabric"
+				"1.20.1" -> "mc1.20.1-0.5.11"
+				else -> ""
+			}))
 		}
 
-		override fun addForge(deps: DependencyHandlerScope) {
+		override fun addForge(mod : ModData, deps: DependencyHandler) {
 			deps.modImplementation(modrinth("embeddium", "0.3.31+mc1.20.1"))
 			deps.compileOnly(deps.annotationProcessor("io.github.llamalad7:mixinextras-common:0.3.5")!!)
 			deps.include(deps.implementation("io.github.llamalad7:mixinextras-forge:0.3.5")!!)
 		}
 
-		override fun addNeo(deps: DependencyHandlerScope) {
-			deps.implementation(modrinth("sodium", "mc1.21-0.6.0-beta.2-neoforge"))
+		override fun addNeo(mod : ModData, deps: DependencyHandler) {
 
-			deps.compileOnly("org.sinytra.forgified-fabric-api:fabric-api-base:0.4.42+d1308dedd1")
-			deps.compileOnly("org.sinytra.forgified-fabric-api:fabric-renderer-api-v1:3.4.0+acb05a39d1")
+			when (mod.mcVersion)
+			{
+				"1.21.4" -> {
+					deps.implementation(modrinth("sodium", "mc1.21.4-0.6.6-neoforge"))
+
+					deps.compileOnly("org.sinytra.forgified-fabric-api:fabric-api-base:0.4.42+d1308ded19")
+					deps.compileOnly("org.sinytra.forgified-fabric-api:fabric-renderer-api-v1:5.0.0+babc52e504")
+					deps.compileOnly("org.sinytra.forgified-fabric-api:fabric-rendering-data-attachment-v1:0.3.48+73761d2e19")
+					deps.compileOnly("org.sinytra.forgified-fabric-api:fabric-block-view-api-v2:1.0.10+9afaaf8c19")
+				}
+				"1.21.1" -> {
+					deps.implementation(modrinth("sodium", "mc1.21.1-0.6.5-neoforge"))
+
+					deps.compileOnly("org.sinytra.forgified-fabric-api:fabric-api-base:0.4.42+d1308dedd1")
+					deps.compileOnly("org.sinytra.forgified-fabric-api:fabric-renderer-api-v1:3.4.0+acb05a39d1")
+				}
+			}
 		}
 	}
 
-
 	// ---------- Curseforge/Modrinth Configuration ----------- //
 	// For configuring the dependecies that will show up on your mod page.
-	override val publishHandler: PublishDependencyHandler get() = object : PublishDependencyHandler {
-		override fun addShared(deps: DependencyContainer) {
+	override val publishHandler: BlahajPublishDependencyHandler get() = object : BlahajPublishDependencyHandler {
+		override fun addShared(mod : ModData, deps: DependencyContainer) {
 			deps.requires("sodium-options-api")
 
-			if (isFabric) {
+			if (mod.isFabric) {
 				deps.requires("fabric-api")
 			}
 
-			if (isForge)
+			if (mod.isForge)
 				deps.requires("embeddium")
 			else
 				deps.requires("sodium")
 		}
 
-		override fun addCurseForge(deps: DependencyContainer) {
+		override fun addCurseForge(mod : ModData, deps: DependencyContainer) {
 
 		}
 
-		override fun addModrinth(deps: DependencyContainer) {
+		override fun addModrinth(mod : ModData, deps: DependencyContainer) {
 
 		}
 	}
 }
 
-
-// ---------------TxniTemplate Build Script---------------- //
-//   (only edit below this if you know what you're doing)
-// -------------------------------------------------------- //
-
 plugins {
 	`maven-publish`
+	application
+	id("toni.blahaj") version "1.0.15"
 	kotlin("jvm")
 	kotlin("plugin.serialization")
 	id("dev.kikugie.j52j") version "1.0"
@@ -69,263 +83,33 @@ plugins {
 	id("systems.manifold.manifold-gradle-plugin")
 }
 
-// The manifold Gradle plugin version. Update this if you update your IntelliJ Plugin!
-manifold { manifoldVersion = "2024.1.30" }
-
-// Variables
-class ModData {
-	val id = property("mod.id").toString()
-	val name = property("mod.name").toString()
-	val version = property("mod.version").toString()
-	val group = property("mod.group").toString()
-	val author = property("mod.author").toString()
-	val namespace = property("mod.namespace").toString()
-	val displayName = property("mod.display_name").toString()
-	val description = property("mod.description").toString()
-	val mcDep = property("mod.mc_dep").toString()
-	val license = property("mod.license").toString()
-	val github = property("mod.github").toString()
+blahaj {
+	sc = stonecutter
+	settings = templateSettings
+	init()
 }
-
-val mod = ModData()
-
-val mcVersion = stonecutter.current.project.substringBeforeLast('-')
-
-val loader = loom.platform.get().name.lowercase()
-val isFabric = loader == "fabric"
-val isForge = loader == "forge"
-val isNeo = loader == "neoforge"
-
-version = "${mod.version}-$mcVersion"
-group = mod.group
-base { archivesName.set("${mod.id}-$loader") }
 
 // Dependencies
 repositories {
-	fun strictMaven(url: String, vararg groups: String) = exclusiveContent {
-		forRepository { maven(url) }
-		filter { groups.forEach(::includeGroup) }
+	maven("https://maven.pkg.github.com/ims212/ForgifiedFabricAPI") {
+		credentials {
+			username = "IMS212"
+			// Read only token
+			password = "ghp_" + "DEuGv0Z56vnSOYKLCXdsS9svK4nb9K39C1Hn"
+		}
 	}
-	strictMaven("https://www.cursemaven.com", "curse.maven")
-	strictMaven("https://api.modrinth.com/maven", "maven.modrinth")
-	strictMaven("https://thedarkcolour.github.io/KotlinForForge/", "thedarkcolour")
+	maven("https://www.cursemaven.com")
+	maven("https://api.modrinth.com/maven")
+	maven("https://thedarkcolour.github.io/KotlinForForge/")
 	maven("https://maven.kikugie.dev/releases")
+	maven("https://maven.txni.dev/releases")
 	maven("https://jitpack.io")
 	maven("https://maven.neoforged.net/releases/")
 	maven("https://maven.terraformersmc.com/releases/")
 	maven("https://raw.githubusercontent.com/Fuzss/modresources/main/maven/")
 	maven("https://maven.parchmentmc.org")
 	maven("https://maven.su5ed.dev/releases")
-}
-
-dependencies {
-	minecraft("com.mojang:minecraft:${mcVersion}")
-
-	// apply the Manifold processor, do not remove this unless you want to swap back to Stonecutter preprocessor
-	implementation(annotationProcessor("systems.manifold:manifold-preprocessor:${manifold.manifoldVersion.get()}")!!)
-
-	@Suppress("UnstableApiUsage")
-	mappings(loom.layered {
-		officialMojangMappings()
-		val parchmentVersion = when (mcVersion) {
-			"1.18.2" -> "1.18.2:2022.11.06"
-			"1.19.2" -> "1.19.2:2022.11.27"
-			"1.20.1" -> "1.20.1:2023.09.03"
-			"1.21.1" -> "1.21:2024.07.28"
-			else -> ""
-		}
-		parchment("org.parchmentmc.data:parchment-$parchmentVersion@zip")
-	})
-
-	settings.depsHandler.addGlobal(this)
-
-	if (isFabric) {
-		settings.depsHandler.addFabric(this)
-		modImplementation("net.fabricmc.fabric-api:fabric-api:${property("deps.fapi")}")
-		modImplementation("net.fabricmc:fabric-loader:${property("deps.fabric_loader")}")
-
-		val fcapi = when (mcVersion) {
-			"1.19.2" -> modApi("net.minecraftforge:forgeconfigapiport-fabric:${property("deps.forgeconfigapi")}")
-			else -> modApi("fuzs.forgeconfigapiport:forgeconfigapiport-fabric:${property("deps.forgeconfigapi")}")
-		}
-
-		include(fcapi!!)
-	}
-
-	if (isForge) {
-		settings.depsHandler.addForge(this)
-		"forge"("net.minecraftforge:forge:${mcVersion}-${property("deps.fml")}")
-	}
-
-	if (isNeo) {
-		settings.depsHandler.addNeo(this)
-		"neoForge"("net.neoforged:neoforge:${property("deps.fml")}")
-	}
-
-	vineflowerDecompilerClasspath("org.vineflower:vineflower:1.10.1")
-}
-
-// Loom config
-loom {
-	try {
-		accessWidenerPath.set(rootProject.file("src/main/resources/${mod.id}.accesswidener"))
-	}
-	catch (_: Exception) {
-		println("Could not set accesswidener!")
-	}
-
-	if (loader == "forge") forge {
-		convertAccessWideners.set(true)
-		mixinConfigs("mixins.${mod.id}.json")
-	} else if (loader == "neoforge") neoForge {
-	}
-
-	runConfigs["client"].apply {
-		ideConfigGenerated(true)
-		vmArgs("-Dmixin.debug.export=true", "-Dsodium.checks.issue2561=false")
-		programArgs("--username=nthxny") // Mom look I'm in the codebase!
-		runDir = "../../run/${stonecutter.current.project}/"
-	}
-
-	decompilers {
-		get("vineflower").apply {
-			options.put("mark-corresponding-synthetics", "1")
-		}
-	}
-}
-
-// Tasks
-
-tasks {
-	remapJar {
-		if (isNeo) {
-			atAccessWideners.add("${mod.id}.accesswidener")
-		}
-	}
-}
-
-tasks.withType<JavaCompile>() {
-	options.compilerArgs.add("-Xplugin:Manifold")
-	// modify the JavaCompile task and inject our auto-generated Manifold symbols
-	if(!this.name.startsWith("_")) { // check the name, so we don't inject into Forge internal compilation
-		ManifoldMC.setupPreprocessor(options.compilerArgs, loader, projectDir, mcVersion, stonecutter.active.project == stonecutter.current.project, false)
-	}
-}
-
-project.tasks.register("setupManifoldPreprocessors") {
-	ManifoldMC.setupPreprocessor(ArrayList(), loader, projectDir, mcVersion, stonecutter.active.project == stonecutter.current.project, true)
-}
-
-tasks.setupChiseledBuild { finalizedBy("setupManifoldPreprocessors") }
-
-tasks.register<RenameExampleMod>("renameExampleMod", rootDir, mod.id, mod.name, mod.displayName, mod.namespace, mod.group).configure {
-	group = "build helpers"
-	description = "Renames the example mod to match the mod ID, name, and display name in gradle.properties"
-}
-
-
-
-
-val buildAndCollect = tasks.register<Copy>("buildAndCollect") {
-	group = "build"
-	from(tasks.remapJar.get().archiveFile)
-	into(rootProject.layout.buildDirectory.file("libs/${mod.version}"))
-	dependsOn("build")
-}
-
-if (stonecutter.current.isActive) {
-	rootProject.tasks.register("buildActive") {
-		group = "project"
-		dependsOn(buildAndCollect)
-	}
-
-	rootProject.tasks.register("runActive") {
-		group = "project"
-		dependsOn(tasks.named("runClient"))
-	}
-}
-
-// Resources
-tasks.processResources {
-//	inputs.property("version", mod.version)
-//	inputs.property("mc", mod.mcDep)
-
-	val map = mapOf(
-		"version" to mod.version,
-		"mc" to mod.mcDep,
-		"id" to mod.id,
-		"group" to mod.group,
-		"author" to mod.author,
-		"namespace" to mod.namespace,
-		"description" to mod.description,
-		"name" to mod.name,
-		"license" to mod.license,
-		"github" to mod.github,
-		"display_name" to mod.displayName,
-		"fml" to if (loader == "neoforge") "1" else "45",
-		"mnd" to if (loader == "neoforge") "" else "mandatory = true"
-	)
-
-	filesMatching("fabric.mod.json") { expand(map) }
-	filesMatching("META-INF/mods.toml") { expand(map) }
-	filesMatching("META-INF/neoforge.mods.toml") { expand(map) }
-}
-
-stonecutter {
-	val j21 = eval(mcVersion, ">=1.20.6")
-	java {
-		withSourcesJar()
-		sourceCompatibility = if (j21) JavaVersion.VERSION_21 else JavaVersion.VERSION_17
-		targetCompatibility = if (j21) JavaVersion.VERSION_21 else JavaVersion.VERSION_17
-	}
-
-	kotlin {
-		jvmToolchain(if (j21) 21 else 17)
-	}
-}
-
-// Publishing
-publishMods {
-	file = tasks.remapJar.get().archiveFile
-	additionalFiles.from(tasks.remapSourcesJar.get().archiveFile)
-	displayName = "${mod.name} ${loader.replaceFirstChar { it.uppercase() }} ${mod.version} for ${property("mod.mc_title")}"
-	version = mod.version
-	changelog = rootProject.file("CHANGELOG.md").readText()
-	type = STABLE
-	modLoaders.add(loader)
-
-	val targets = property("mod.mc_targets").toString().split(' ')
-
-	dryRun = providers.environmentVariable("MODRINTH_TOKEN").getOrNull() == null ||
-			providers.environmentVariable("CURSEFORGE_TOKEN").getOrNull() == null
-
-	modrinth {
-		projectId = property("publish.modrinth").toString()
-		accessToken = providers.environmentVariable("MODRINTH_TOKEN")
-		targets.forEach(minecraftVersions::add)
-		val deps = DependencyContainer(null, this)
- 		settings.publishHandler.addModrinth(deps)
-		settings.publishHandler.addShared(deps)
-	}
-
-	curseforge {
-		projectId = property("publish.curseforge").toString()
-		accessToken = providers.environmentVariable("CURSEFORGE_TOKEN")
-		targets.forEach(minecraftVersions::add)
-		val deps = DependencyContainer(this, null)
-		settings.publishHandler.addCurseForge(deps)
-		settings.publishHandler.addShared(deps)
-	}
-}
-
-publishing {
-	publications {
-		create<MavenPublication>("mavenJava") {
-			groupId = "${property("mod.group")}.${mod.id}"
-			artifactId = mod.version
-			version = mcVersion
-
-			from(components["java"])
-		}
-	}
+	maven("https://maven.su5ed.dev/releases")
+	maven("https://maven.fabricmc.net")
+	maven("https://maven.shedaniel.me/")
 }

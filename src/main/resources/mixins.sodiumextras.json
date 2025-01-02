@@ -3,15 +3,14 @@
   "package": "toni.sodiumextras.mixins",
   "compatibilityLevel": "JAVA_17",
   "minVersion": "0.8",
-  "mixins": [
-    "impl.sodium.EmbPagesMixin",
-    "impl.entitydistance.EntityTypeMixin",
-    "impl.entitydistance.TileEntityTypeMixin"
-  ],
+  "mixins": [ ],
   "injectors": {
     "defaultRequire": 1
   },
   "client": [
+    "impl.sodium.EmbPagesMixin",
+    "impl.entitydistance.EntityTypeMixin",
+    "impl.entitydistance.TileEntityTypeMixin",
     "impl.borderless.BorderlessWindowMixin",
     "impl.borderless.KeyboardF11Mixin",
     "impl.borderless.accessors.MainWindowAccessor",

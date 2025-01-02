@@ -1,1 +1,1 @@
-fix config not saving when applied in game (#2)
+fix loading on dedicated servers
