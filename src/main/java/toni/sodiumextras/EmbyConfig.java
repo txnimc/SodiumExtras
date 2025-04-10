@@ -13,8 +13,6 @@ import java.util.List;
 
 #if FABRIC
     #if AFTER_21_1
-    import fuzs.forgeconfigapiport.fabric.api.neoforge.v4.NeoForgeConfigRegistry;
-    import fuzs.forgeconfigapiport.fabric.api.neoforge.v4.client.ConfigScreenFactoryRegistry;
     import net.neoforged.neoforge.client.gui.ConfigurationScreen;
 	import net.neoforged.fml.config.ModConfig;
     import net.neoforged.neoforge.common.ModConfigSpec;

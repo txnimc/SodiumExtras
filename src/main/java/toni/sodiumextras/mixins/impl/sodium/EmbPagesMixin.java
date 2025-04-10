@@ -54,7 +54,7 @@ public class EmbPagesMixin {
         EmbPlusOptions.setFPSOptions(groups, sodiumOpts);
     }
 
-    @Inject(method = "performance", at = @At(value = "INVOKE", target = "Lnet/caffeinemc/mods/sodium/client/services/PlatformRuntimeInformation;isDevelopmentEnvironment()Z"), locals = LocalCapture.CAPTURE_FAILHARD)
+    @Inject(method = "performance", at = @At(value = "INVOKE", target = "Lcom/google/common/collect/ImmutableList;copyOf(Ljava/util/Collection;)Lcom/google/common/collect/ImmutableList;"), locals = LocalCapture.CAPTURE_FAILHARD)
     private static void setPerformanceOptions(CallbackInfoReturnable<OptionPage> cir, List<OptionGroup> groups) {
         EmbPlusOptions.setPerformanceOptions(groups, sodiumOpts);
     }

@@ -12,11 +12,20 @@ import toni.sodiumextras.foundation.fps.FpsHistory;
     import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
     import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
     import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
-    #if AFTER_21_1
+
+    #if mc >= 215
+    import fuzs.forgeconfigapiport.fabric.api.v5.ModConfigEvents;
+    import fuzs.forgeconfigapiport.fabric.api.v5.ConfigRegistry;
+    import fuzs.forgeconfigapiport.fabric.api.v5.client.ConfigScreenFactoryRegistry;
+    #elif mc >= 211
     import fuzs.forgeconfigapiport.fabric.api.neoforge.v4.NeoForgeConfigRegistry;
     import fuzs.forgeconfigapiport.fabric.api.neoforge.v4.client.ConfigScreenFactoryRegistry;
-    import net.neoforged.neoforge.client.gui.ConfigurationScreen;
     import fuzs.forgeconfigapiport.fabric.api.neoforge.v4.NeoForgeModConfigEvents;
+    #endif
+
+    #if AFTER_21_1
+
+    import net.neoforged.neoforge.client.gui.ConfigurationScreen;
     import net.neoforged.fml.config.ModConfig;
     import net.neoforged.neoforge.common.ModConfigSpec;
     import net.neoforged.neoforge.common.ModConfigSpec.*;
@@ -65,17 +74,24 @@ public class SodiumExtras #if FABRIC implements ClientModInitializer #endif {
     #if FABRIC
     @Override
     public void onInitializeClient() {
-        #if AFTER_21_1
-        NeoForgeModConfigEvents.loading(SodiumExtras.ID).register((ModConfig config) -> {
-            EmbyConfig.updateCache();
-        });
+        #if mc >= 211
         ClientLifecycleEvents.CLIENT_STOPPING.register((mc) -> {
             EmbyConfig.SPECS.save();
         });
-        NeoForgeConfigRegistry.INSTANCE.register(SodiumExtras.ID, ModConfig.Type.CLIENT, EmbyConfig.SPECS);
+        #endif
+
+        #if mc >= 215
+            ModConfigEvents.loading(SodiumExtras.ID).register((ModConfig config) -> EmbyConfig.updateCache());
+            ConfigRegistry.INSTANCE.register(SodiumExtras.ID, ModConfig.Type.CLIENT, EmbyConfig.SPECS);
+        #elif AFTER_21_1
+            NeoForgeModConfigEvents.loading(SodiumExtras.ID).register((ModConfig config) -> {
+                EmbyConfig.updateCache();
+            });
+
+            NeoForgeConfigRegistry.INSTANCE.register(SodiumExtras.ID, ModConfig.Type.CLIENT, EmbyConfig.SPECS);
         #else
-        ModConfigEvents.loading(SodiumExtras.ID).register((ModConfig config) -> EmbyConfig.updateCache());
-        ForgeConfigRegistry.INSTANCE.register(SodiumExtras.ID, net.minecraftforge.fml.config.ModConfig.Type.CLIENT, EmbyConfig.SPECS);
+            ModConfigEvents.loading(SodiumExtras.ID).register((ModConfig config) -> EmbyConfig.updateCache());
+            ForgeConfigRegistry.INSTANCE.register(SodiumExtras.ID, net.minecraftforge.fml.config.ModConfig.Type.CLIENT, EmbyConfig.SPECS);
         #endif
 
         HudRenderCallback.EVENT.register((drawContext, tickCounter) -> {
